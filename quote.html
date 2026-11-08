@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Customer estimate | Yolo Reliable Repairs</title>
+<style>
+  :root { color-scheme: light; font: 100%/1.5 system-ui, sans-serif; color: #20392e; background: #f5f3eb; }
+  * { box-sizing: border-box; }
+  body { margin: 0; }
+  main { max-width: 48rem; margin: auto; padding: clamp(1rem, 4vw, 3rem); }
+  .brand { border-top: .35rem solid #ae5f34; padding-top: 1rem; }
+  .brand strong { font-size: 1.2rem; }
+  .brand p { margin: .1rem 0; }
+  h1, h2 { font-family: Georgia, serif; line-height: 1.15; }
+  h1 { font-size: clamp(2rem, 6vw, 3.3rem); }
+  h2 { font-size: 2rem; margin-bottom: .4rem; }
+  form, article { background: white; border: 1px solid #cad3ca; border-radius: .7rem; padding: clamp(1rem, 4vw, 2rem); }
+  article { margin-top: 1.5rem; overflow-wrap: anywhere; }
+  label, legend, dt { font-weight: 650; }
+  input, textarea, button { font: inherit; }
+  input, textarea { width: 100%; border: 1px solid #78897f; border-radius: .35rem; padding: .55rem; }
+  textarea { resize: vertical; }
+  .field { margin-bottom: 1rem; }
+  fieldset { padding: 0; border: 0; margin: 1.5rem 0; min-width: 0; }
+  legend { padding: 0; font-size: 1.25rem; }
+  .hint, .note { color: #506057; }
+  .hint { margin: .25rem 0; }
+  .service { display: grid; grid-template-columns: 1fr 5rem; gap: .75rem; align-items: center; padding: .8rem 0; border-bottom: 1px solid #dce1da; }
+  small { display: block; font-weight: 400; }
+  button { border: 0; border-radius: .4rem; padding: .75rem 1.2rem; background: #245640; color: white; font-weight: 650; cursor: pointer; }
+  button:hover { background: #173c2b; }
+  :focus-visible { outline: 3px solid #ae5f34; outline-offset: 3px; }
+  [aria-invalid="true"] { border: 2px solid #922d22; }
+  #error { color: #922d22; font-weight: 650; }
+  #error:empty { margin: 0; }
+  dd { margin: 0 0 .75rem; white-space: pre-wrap; }
+  table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  caption { text-align: left; font-weight: 650; margin: .75rem 0; }
+  th, td { border-bottom: 1px solid #cad3ca; padding: .55rem .25rem; text-align: right; }
+  th:first-child, td:first-child { text-align: left; }
+  .total { display: flex; justify-content: space-between; gap: .75rem; font-weight: 750; }
+  .note { font-size: .92rem; }
+  @media (max-width: 32rem) {
+    main, form, article { padding: .85rem; }
+    table { font-size: .88rem; }
+    th, td { padding: .5rem .1rem; }
+    button { width: 100%; }
+  }
+  @page { margin: 16mm; }
+  @media print {
+    :root { background: white; color: black; }
+    main { max-width: none; padding: 0; }
+    main > header, form, button { display: none; }
+    article { margin: 0; padding: 0; border: 0; }
+    tr, .total, .note { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <header class="brand">
+    <strong>Yolo Reliable Repairs</strong>
+    <p>Quality Work You Can Trust.</p>
+    <h1>Customer estimate</h1>
+  </header>
+  <form id="quote-form" novalidate>
+    <div class="field">
+      <label for="customer">Customer name</label>
+      <input id="customer" required>
+    </div>
+    <div class="field">
+      <label for="project">Project description</label>
+      <textarea id="project" rows="3" required></textarea>
+    </div>
+    <fieldset>
+      <legend>Service quantities</legend>
+      <p class="hint">Use whole numbers. Leave unused services at zero.</p>
+      <div class="service">
+        <label for="fans"><span>Ceiling Fan Installation</span><small>$150 per fan</small></label>
+        <input id="fans" inputmode="numeric" value="0" data-rate="150" required>
+      </div>
+      <div class="service">
+        <label for="doors"><span>Garage Door Insulation</span><small>$149 per door</small></label>
+        <input id="doors" inputmode="numeric" value="0" data-rate="149" required>
+      </div>
+      <div class="service">
+        <label for="showers"><span>Shower Recaulking</span><small>$150 per shower</small></label>
+        <input id="showers" inputmode="numeric" value="0" data-rate="150" required>
+      </div>
+    </fieldset>
+    <p id="error" role="alert"></p>
+    <button type="submit">Generate Estimate</button>
+  </form>
+
+  <article id="estimate" aria-labelledby="estimate-title" hidden>
+    <header class="brand">
+      <strong>Yolo Reliable Repairs</strong>
+      <p>Quality Work You Can Trust.</p>
+      <h2 id="estimate-title" tabindex="-1">Labor estimate</h2>
+      <p id="date"></p>
+    </header>
+    <dl>
+      <dt>Customer name</dt><dd id="quote-name"></dd>
+      <dt>Project description</dt><dd id="quote-project"></dd>
+    </dl>
+    <table>
+      <caption>Selected services</caption>
+      <thead><tr><th scope="col">Service</th><th scope="col">Qty</th><th scope="col">Unit price</th><th scope="col">Subtotal</th></tr></thead>
+      <tbody id="items"></tbody>
+    </table>
+    <p class="total">Combined labor total <span id="total"></span></p>
+    <p class="note">This is a preliminary labor estimate. Final pricing may change based on job conditions, materials, and additional work.</p>
+    <button id="print" type="button">Print / Save as PDF</button>
+  </article>
+</main>
+<script>
+  const byId = id => document.getElementById(id);
+  const form = byId("quote-form");
+  const fields = form.querySelectorAll("[data-rate]");
+  const estimate = byId("estimate");
+  const error = byId("error");
+  const money = new Intl.NumberFormat("en-US", {
+    style: "currency", currency: "USD", maximumFractionDigits: 0
+  });
+
+  function clearFeedback() {
+    estimate.hidden = true;
+    error.textContent = "";
+    for (const field of form.querySelectorAll('[aria-invalid="true"]')) {
+      field.removeAttribute("aria-invalid");
+      field.removeAttribute("aria-describedby");
+    }
+  }
+
+  function showError(field, message) {
+    error.textContent = message;
+    field.setAttribute("aria-invalid", "true");
+    field.setAttribute("aria-describedby", "error");
+    field.focus();
+  }
+
+  function addRow(name, quantity, rate, subtotal) {
+    const row = byId("items").insertRow();
+    for (const value of [name, quantity.toString(), money.format(rate), money.format(subtotal)]) {
+      row.insertCell().textContent = value;
+    }
+  }
+
+  form.addEventListener("input", clearFeedback);
+  form.addEventListener("submit", event => {
+    event.preventDefault();
+    clearFeedback();
+    const customer = byId("customer").value.trim();
+    const project = byId("project").value.trim();
+    if (!customer) return showError(byId("customer"), "Enter the customer’s name.");
+    if (!project) return showError(byId("project"), "Enter a project description.");
+
+    const selected = [];
+    let total = 0n;
+    for (const field of fields) {
+      const name = field.labels[0].querySelector("span").textContent;
+      if (field.value.length === 0 || /[^0-9]/.test(field.value)) {
+        return showError(field, "For " + name + ", enter a whole number using digits 0–9.");
+      }
+      const quantity = BigInt(field.value);
+      if (quantity === 0n) continue;
+      const rate = BigInt(field.dataset.rate);
+      const subtotal = quantity * rate;
+      selected.push({ name, quantity, rate, subtotal });
+      total += subtotal;
+    }
+    if (!selected.length) return showError(fields[0], "Enter at least one service quantity above zero.");
+
+    byId("quote-name").textContent = customer;
+    byId("quote-project").textContent = project;
+    byId("date").textContent = new Date().toLocaleDateString("en-US", { dateStyle: "long" });
+    byId("items").replaceChildren();
+    for (const item of selected) {
+      addRow(item.name, item.quantity, item.rate, item.subtotal);
+    }
+    byId("total").textContent = money.format(total);
+    estimate.hidden = false;
+    byId("estimate-title").focus();
+  });
+  byId("print").addEventListener("click", () => window.print());
+</script>
+</body>
+</html>
