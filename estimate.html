@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Labor Estimate | Yolo Reliable Repairs</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: #f5f4ef;
+      color: #203931;
+      font: 1rem/1.5 system-ui, sans-serif;
+    }
+    main { max-width: 42rem; margin: auto; padding: 2rem 1rem; }
+    header { border-top: 5px solid #bb682f; padding-top: 1rem; }
+    .brand { font-weight: 750; letter-spacing: .04em; }
+    h1 { font-size: clamp(2rem, 7vw, 3rem); line-height: 1.1; margin: 1rem 0; }
+    form, #estimate {
+      background: white;
+      padding: clamp(1rem, 4vw, 2rem);
+      border: 1px solid #cbd3cb;
+      border-radius: .75rem;
+    }
+    .service, .amount {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      padding: .9rem 0;
+      border-bottom: 1px solid #dce1da;
+    }
+    label { font-weight: 650; }
+    label span { display: block; font-size: .9rem; font-weight: 400; }
+    input, button { font: inherit; border-radius: .4rem; }
+    input { width: 5rem; padding: .6rem; border: 1px solid #7c8c82; }
+    input[aria-invalid="true"] { border: 2px solid #a12c22; }
+    :focus-visible { outline: 3px solid #b35c17; outline-offset: 3px; }
+    button {
+      margin-top: 1.25rem;
+      width: 100%;
+      padding: .8rem;
+      background: #235440;
+      color: white;
+      border: 0;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    button:hover { background: #173e2e; }
+    #error { color: #922d22; font-weight: 600; }
+    #error:empty { margin: 0; }
+    #estimate { margin-top: 1rem; overflow-wrap: anywhere; }
+    h2 { margin: 0; font-size: 1.25rem; }
+    .amount:last-child { border: 0; padding-bottom: 0; font-weight: 750; }
+    footer { margin-top: 1rem; font-size: .92rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div class="brand">Yolo Reliable Repairs</div>
+      <h1>Labor estimate</h1>
+      <p>Enter how many fans, doors, or showers need work.
+        Leave unused services at zero.</p>
+    </header>
+
+    <form id="calculator">
+      <div class="service">
+        <label for="fans">Ceiling Fan Installation<span>$150 per fan</span></label>
+        <input id="fans" type="text" inputmode="numeric" value="0" data-rate="150">
+      </div>
+      <div class="service">
+        <label for="doors">Garage Door Insulation<span>$149 per door</span></label>
+        <input id="doors" type="text" inputmode="numeric" value="0" data-rate="149">
+      </div>
+      <div class="service">
+        <label for="showers">Shower Recaulking<span>$150 per shower</span></label>
+        <input id="showers" type="text" inputmode="numeric" value="0" data-rate="150">
+      </div>
+      <p id="error" role="alert"></p>
+      <button type="submit">Calculate Total</button>
+    </form>
+
+    <div aria-live="polite">
+      <section id="estimate" aria-label="Estimate breakdown" hidden>
+        <h2>Your estimate</h2>
+        <div id="amounts"></div>
+      </section>
+    </div>
+    <footer>Prices are preliminary labor estimates and may change based on
+      site conditions and materials.</footer>
+  </main>
+
+  <script>
+    const form = document.getElementById("calculator");
+    const inputs = form.querySelectorAll("input");
+    const error = document.getElementById("error");
+    const estimate = document.getElementById("estimate");
+    const amounts = document.getElementById("amounts");
+    const money = new Intl.NumberFormat("en-US", {
+      style: "currency", currency: "USD", maximumFractionDigits: 0
+    });
+
+    function clearFeedback() {
+      error.textContent = "";
+      estimate.hidden = true;
+      amounts.replaceChildren();
+      for (const input of inputs) {
+        input.removeAttribute("aria-invalid");
+        input.removeAttribute("aria-describedby");
+      }
+    }
+
+    function showError(message, input) {
+      error.textContent = message;
+      input.setAttribute("aria-invalid", "true");
+      input.setAttribute("aria-describedby", "error");
+      input.focus();
+    }
+
+    function addAmount(label, dollars) {
+      const row = document.createElement("div");
+      row.className = "amount";
+      const name = document.createElement("span");
+      const price = document.createElement("span");
+      name.textContent = label;
+      price.textContent = money.format(dollars);
+      row.append(name, price);
+      amounts.append(row);
+    }
+
+    form.addEventListener("input", clearFeedback);
+    form.addEventListener("submit", function (event) {
+      event.preventDefault();
+      clearFeedback();
+      const selected = [];
+      let total = 0n;
+
+      for (const input of inputs) {
+        const name = input.labels[0].firstChild.textContent;
+        if (!/^[0-9]+$/.test(input.value)) {
+          showError("For " + name + ", enter a whole number using digits 0–9.", input);
+          return;
+        }
+        const quantity = BigInt(input.value);
+        if (quantity > 0n) {
+          const subtotal = quantity * BigInt(input.dataset.rate);
+          selected.push({ name, subtotal });
+          total += subtotal;
+        }
+      }
+
+      if (selected.length === 0) {
+        showError("Enter at least one fan, door, or shower.", inputs[0]);
+        return;
+      }
+      for (const service of selected) {
+        addAmount(service.name, service.subtotal);
+      }
+      addAmount("Combined total", total);
+      estimate.hidden = false;
+    });
+  </script>
+</body>
+</html>
