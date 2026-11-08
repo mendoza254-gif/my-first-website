@@ -1,38 +1,58 @@
 
 # Yolo Reliable Repairs
-## Future Estimate Management System
+## Estimate Management System Architecture
 
-### Goal
-Build an application that can save and retrieve
-customer estimates.
+### 1. Project Goal
+Build a secure application to create, save, search,
+and manage customer estimates.
 
-### Frontend
-- Enter customer details
+### 2. Frontend
+The frontend will allow users to:
+- Enter customer information
 - Select services and quantities
-- Generate estimates
-- Search previous estimates
+- View calculated estimates
+- Search for previous estimates
+- Print estimates
 
-### Backend
-- Verify user permissions
+### 3. Backend
+The backend will:
+- Verify user authentication and permissions
 - Validate submitted information
 - Calculate official prices
-- Save and retrieve records
+- Save and retrieve estimates
+- Communicate with other authorized systems
 
-### Database
-Store:
-- Customer ID and details
+### 4. Database
+The database will store:
+- Customer ID
+- Customer name and contact information
 - Estimate ID and date
-- Selected services and quantities
+- Services, quantities, and unit prices
 - Estimate total
 - Estimate status
 
-### API
-- GET: Retrieve estimates
-- POST: Create estimates
-- PATCH: Update estimates
+### 5. API
+The application will use API requests:
+- GET: Retrieve an estimate
+- POST: Create an estimate
+- PATCH: Update an estimate
+- DELETE: Remove an estimate when authorized
 
-### Security
+### 6. Security
 - Require authentication
+- Restrict access to authorized users
+- Keep passwords and API keys out of frontend code
+- Validate information on the backend
 - Protect customer information
-- Keep API keys and passwords secret
-- Use fictional data during development
+- Use fictional data while testing
+
+### 7. Future Features
+- Email estimates to customers
+- Track accepted and declined estimates
+- Create invoices
+- Connect with Wix or HighLevel
+
+### 8. Current Status
+Planning only. No backend or database has
+been connected yet.
+  
