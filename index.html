@@ -56,5 +56,67 @@
   <a class="button" href="https://www.yoloreliablerepairs.com">
     Visit Our Website
   </a>
+  
+<section>
+  <h2>Ceiling Fan Installation Estimate</h2>
+
+  <p>Installation labor: $150 per fan</p>
+
+  <label for="fanCount">Number of fans:</label>
+
+  <input
+    type="number"
+    id="fanCount"
+    min="1"
+    step="1"
+    value="1"
+  >
+
+  <button type="button" id="calculateButton">
+    Calculate Estimate
+  </button>
+
+  <p id="estimate">Your estimate will appear here.</p>
+
+  <p>
+    <small>
+      Estimate assumes an existing fan-rated
+      electrical box. Additional work and
+      materials are not included.
+    </small>
+  </p>
+</section>
+
+<script>
+  // Price for one ceiling fan installation
+  const pricePerFan = 150;
+
+  // Find the elements on our webpage
+  const fanInput = document.getElementById("fanCount");
+  const button = document.getElementById("calculateButton");
+  const result = document.getElementById("estimate");
+
+  // Run this code when the button is clicked
+  button.addEventListener("click", function() {
+
+    // Get the number of fans entered
+    const quantity = Number(fanInput.value);
+
+    // Check that the quantity is valid
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      result.textContent = "Enter a whole number of fans.";
+      return;
+    }
+
+    // Calculate the total price
+    const total = quantity * pricePerFan;
+
+    // Display the result on the webpage
+    result.textContent = "Estimated labor: $" +
+      total.toFixed(2);
+
+  });
+</script>
+
 </body>
 </html>
